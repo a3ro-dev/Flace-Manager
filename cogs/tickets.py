@@ -44,6 +44,9 @@ class TicketSystem(commands.Cog):
     @commands.hybrid_command(aliases=['tick', 'ticket', 'support'])
     @commands.has_permissions(administrator=True)
     async def open_ticket(self, ctx: commands.Context):
+        """
+        Sends the ticker menu panel
+        """
         try:
             await ctx.send(content="Please select a ticket type", view=TicketView(self.config))
         except Exception as e:
