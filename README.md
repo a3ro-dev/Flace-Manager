@@ -40,5 +40,4 @@ Contributions to this project are welcome! Please fork the repository and submit
 
 This project is licensed under the [MIT License](LICENSE) - see the LICENSE file for details.
 
-# Flace-Manager
-# Flace-Manager
+
