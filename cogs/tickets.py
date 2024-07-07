@@ -39,7 +39,7 @@ class TicketSystem(commands.Cog):
 
     async def cog_load(self):
         self.bot.add_view(TicketView(self.config))
-        self.bot.add_view(Close())
+        self.bot.add_view(CloseandClaim())
 
     @commands.hybrid_command(aliases=['tick', 'ticket', 'support'])
     @commands.has_permissions(administrator=True)
