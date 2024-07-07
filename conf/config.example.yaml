@@ -1,0 +1,27 @@
+creds:
+  support_server: https://discord.gg/your-discord-server
+  prefix: '-'
+  owner_ids:
+    - your-owner-id-1
+    - your-owner-id-2
+  token: "your-bot-token"
+
+  tickets:
+    category_id: your-category-id
+    log_channel_id: your-log-channel-id
+    unifiedSupportRole: your-unified-support-role-id
+    ticket_message: "Hello {user}, thank you for creating a ticket! Please describe your issue and a staff member will be with you shortly."
+    ticket_name: "ticket-{user}"
+    ticket_topic: "Ticket opened by {user}"
+    ticket_close_message: "Ticket closed by {closer}"
+    ticket_close_reason: "No reason provided."
+    ticket_close_log: "Ticket closed by {closer} for {reason}"
+    ticket_close_log_reason: "No reason provided."
+    ticket_close_log_channel: your-log-channel-id
+    ticket_close_log_color: 0x000000
+    ticket_close_log_footer: "Ticket closed by {closer}"
+
+  CLR: 0x000000
+
+  suggestion:
+    channel_id: your-suggestion-channel-id

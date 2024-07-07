@@ -1,0 +1,7 @@
+discord
+jishaku
+discord-pretty-help
+psutil
+pyyaml
+py-cpuinfo
+aiosqlite
