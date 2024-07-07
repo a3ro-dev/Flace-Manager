@@ -59,6 +59,7 @@ bot = Bot()
 @bot.event
 async def on_ready():
     bot.loop.create_task(update_presence())
+    subprocess.run(["git", "pull"])
     link = await bot.guilds[0].text_channels[0].create_invite(max_age=0, max_uses=0, unique=True)
     logger.info(f"-----------------------------------------------------------------------------")
     print(f"{link}")

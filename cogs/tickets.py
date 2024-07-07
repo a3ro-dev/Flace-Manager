@@ -99,10 +99,11 @@ class Ticket(discord.ui.Select):
                 return
 
             if isinstance(interaction.user, discord.Member):
+                await ticket_channel.set_permissions(interaction.guild.default_role, view_channel=False)
                 await ticket_channel.set_permissions(interaction.user, view_channel=True, send_messages=True)
             await ticket_channel.set_permissions(role, view_channel=True, send_messages=True)
 
-            view = Close()
+            view = CloseandClaim()
             await ticket_channel.send(f"{interaction.user.mention} | <@&{role_id}>")
 
             ticket_message = self.config['tickets']['ticket_message'].format(user=interaction.user.mention)
@@ -116,7 +117,7 @@ class TicketView(discord.ui.View):
         super().__init__(timeout=None)
         self.add_item(Ticket(config))
 
-class Close(discord.ui.View):
+class CloseandClaim(discord.ui.View):
     def __init__(self):
         super().__init__(timeout=None)
         self.value = None
@@ -134,6 +135,27 @@ class Close(discord.ui.View):
                 await interaction.response.send_message('You are missing permissions to delete the channel!', ephemeral=True)
         except Exception as e:
             logging.error(f"Failed to close ticket: {e}")
+
+    @discord.ui.button(label="Claim", style=discord.ButtonStyle.green, custom_id='claim')
+    async def claim_ticket(self, interaction: discord.Interaction, button: discord.ui.Button):
+        try:
+            # Check if the user has the manage_channels permission
+            if interaction.user.guild_permissions.manage_channels:
+                await interaction.response.send_message('Claiming the ticket!', ephemeral=True)
+                await asyncio.sleep(10)
+                # Ensure the interaction.channel is a GuildChannel and interaction.guild is not None
+                if isinstance(interaction.channel, discord.abc.GuildChannel) and interaction.guild:
+                    # Use @everyone role directly from the guild's roles
+                    everyone_role = interaction.guild.default_role
+                    await interaction.channel.set_permissions(everyone_role, view_channel=False)
+                    # Ensure interaction.user is a Member instance before setting permissions
+                    if isinstance(interaction.user, discord.Member):
+                        await interaction.channel.set_permissions(interaction.user, view_channel=True, send_messages=True)
+                        self.value = True
+            else:
+                await interaction.response.send_message('You are missing permissions to claim the ticket!', ephemeral=True)
+        except Exception as e:
+            logging.error(f"Failed to claim ticket: {e}")
 
 async def setup(bot: commands.Bot):
     try:
