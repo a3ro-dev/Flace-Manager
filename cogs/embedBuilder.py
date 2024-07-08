@@ -28,6 +28,16 @@ class ButtonBuilderModal(ui.Modal):
         input_value = self.children[0].value
         await self.builder.add_button_detail(interaction, input_value)
 
+class ChannelIDModal(ui.Modal):
+    def __init__(self, builder):
+        super().__init__(title="Channel ID Input")
+        self.builder = builder
+        self.add_item(ui.TextInput(label="Channel ID", placeholder="Enter the channel ID", style=discord.TextStyle.short))
+
+    async def on_submit(self, interaction: discord.Interaction):
+        channel_id = self.children[0].value
+        await self.builder.send_embed_to_channel(interaction, channel_id)
+
 class EmbedFieldModal(ui.Modal):
     def __init__(self, builder, index=None, name="", value="", inline=False):
         super().__init__(title="Embed Field Editor")
@@ -44,7 +54,7 @@ class EmbedFieldModal(ui.Modal):
         if self.index is None:
             self.builder.fields.append((name, value, inline))
         else:
-            self.builder.fields[self.index] = (name, value, inline)
+            self.builder.fields[self.index] = (name, value, inline))
         await self.builder.update_embed_preview(interaction)
 
 class EmbedBuilderView(ui.View):
@@ -170,15 +180,19 @@ class EmbedBuilderView(ui.View):
     async def attach_button_button(self, interaction: discord.Interaction, button: ui.Button):
         await interaction.response.send_modal(ButtonBuilderModal(self, "button_text", "Enter button text", "Button Text"))
 
-    @ui.button(label="Send Embed", style=discord.ButtonStyle.success, row=4)
+    @ui.button(label="Send Embed", style=discord.ButtonStyle.success, row=5)
     async def send_embed_button(self, interaction: discord.Interaction, button: ui.Button):
-        await interaction.response.send_modal(EmbedBuilderModal(self, "channel_id", "Enter channel ID", "Channel ID"))
+        await interaction.response.send_modal(ChannelIDModal(self))
 
-    async def send_embed_to_channel(self, interaction: discord.Interaction, value: str):
-        self.channel_id = int(value)
-        channel = self.bot.get_channel(self.channel_id)
+    async def send_embed_to_channel(self, interaction: discord.Interaction, channel_id: str):
+        channel = self.bot.get_channel(int(channel_id))
         if channel:
-            embed = discord.Embed(title=self.title, description=self.description, color=self.color, url=self.url)
+            embed = discord.Embed(
+                title=self.title, 
+                description=self.description, 
+                color=self.color, 
+                url=self.url
+            )
             embed.set_author(name=self.author_name, icon_url=self.author_icon_url)
             embed.set_thumbnail(url=self.thumbnail_url)
             embed.set_image(url=self.image_url)
