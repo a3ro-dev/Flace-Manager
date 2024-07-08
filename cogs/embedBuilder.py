@@ -15,8 +15,18 @@ class EmbedBuilderModal(ui.Modal):
         self.add_item(ui.TextInput(label=field_label, placeholder=placeholder, style=style))
 
     async def on_submit(self, interaction: discord.Interaction):
-        input_value = self.children[0].value #type: ignore
+        input_value = self.children[0].value
         await getattr(self.builder, f"set_{self.field_name}")(interaction, input_value)
+
+class ButtonBuilderModal(ui.Modal):
+    def __init__(self, builder, placeholder: str, field_label: str, style=discord.TextStyle.short):
+        super().__init__(title="Button Builder")
+        self.builder = builder
+        self.add_item(ui.TextInput(label=field_label, placeholder=placeholder, style=style))
+
+    async def on_submit(self, interaction: discord.Interaction):
+        input_value = self.children[0].value
+        await self.builder.add_button_detail(interaction, input_value)
 
 class EmbedFieldModal(ui.Modal):
     def __init__(self, builder, index=None, name="", value="", inline=False):
@@ -28,8 +38,8 @@ class EmbedFieldModal(ui.Modal):
         self.inline = inline
 
     async def on_submit(self, interaction: discord.Interaction):
-        name = self.children[0].value #type: ignore
-        value = self.children[1].value #type: ignore
+        name = self.children[0].value
+        value = self.children[1].value
         inline = self.inline
         if self.index is None:
             self.builder.fields.append((name, value, inline))
@@ -52,6 +62,8 @@ class EmbedBuilderView(ui.View):
         self.footer_icon_url = ""
         self.image_url = ""
         self.url = ""
+        self.buttons = []
+        self.channel_id = None
 
     async def update_embed_preview(self, interaction: discord.Interaction):
         embed = discord.Embed(title=self.title, description=self.description, color=self.color, url=self.url)
@@ -106,6 +118,10 @@ class EmbedBuilderView(ui.View):
         self.url = value
         await self.update_embed_preview(interaction)
 
+    async def add_button_detail(self, interaction: discord.Interaction, value: str):
+        self.buttons.append(value)
+        await interaction.response.send_message("Button detail added.", ephemeral=True)
+
     @ui.button(label="Set Title", style=discord.ButtonStyle.primary, row=0)
     async def set_title_button(self, interaction: discord.Interaction, button: ui.Button):
         await interaction.response.send_modal(EmbedBuilderModal(self, "title", "Enter the embed title", "Title"))
@@ -150,14 +166,40 @@ class EmbedBuilderView(ui.View):
     async def set_url_button(self, interaction: discord.Interaction, button: ui.Button):
         await interaction.response.send_modal(EmbedBuilderModal(self, "url", "Enter the URL", "URL"))
 
+    @ui.button(label="Attach Button", style=discord.ButtonStyle.primary, row=4)
+    async def attach_button_button(self, interaction: discord.Interaction, button: ui.Button):
+        await interaction.response.send_modal(ButtonBuilderModal(self, "button_text", "Enter button text", "Button Text"))
+
+    @ui.button(label="Send Embed", style=discord.ButtonStyle.success, row=4)
+    async def send_embed_button(self, interaction: discord.Interaction, button: ui.Button):
+        await interaction.response.send_modal(EmbedBuilderModal(self, "channel_id", "Enter channel ID", "Channel ID"))
+
+    async def send_embed_to_channel(self, interaction: discord.Interaction, value: str):
+        self.channel_id = int(value)
+        channel = self.bot.get_channel(self.channel_id)
+        if channel:
+            embed = discord.Embed(title=self.title, description=self.description, color=self.color, url=self.url)
+            embed.set_author(name=self.author_name, icon_url=self.author_icon_url)
+            embed.set_thumbnail(url=self.thumbnail_url)
+            embed.set_image(url=self.image_url)
+            for name, value, inline in self.fields:
+                embed.add_field(name=name, value=value, inline=inline)
+            embed.set_footer(text=self.footer_text, icon_url=self.footer_icon_url)
+
+            view = ui.View()
+            for button_text in self.buttons:
+                view.add_item(ui.Button(label=button_text, style=discord.ButtonStyle.link, url="https://example.com"))
+
+            await channel.send(embed=embed, view=view)
+            await interaction.response.send_message(f"Embed sent to {channel.mention}", ephemeral=True)
+        else:
+            await interaction.response.send_message("Invalid channel ID.", ephemeral=True)
+
 class EmbedBuilder(commands.Cog):
-    """
-    This cog provides functionality to build interactive embeds.
-    """
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-    @commands.hybrid_command(name="embedbuilder")
+    @commands.hybrid_command(name="embedbuilder", description="Interactive embed builder")
     async def embedbuilder(self, ctx: Context):
         """
         Starts an interactive embed builder.
@@ -167,5 +209,3 @@ class EmbedBuilder(commands.Cog):
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(EmbedBuilder(bot))
-
-
